@@ -1,0 +1,23 @@
+version: 2
+
+models:
+  - name: int_sales_lines
+    description: "Itens de venda (sales_details) enriquecidos com atributos do cabeçalho (datas, cliente, região) e desconto alocado por linha. Grão: linha de pedido."
+    columns:
+      - name: sales_details_key
+        description: "Chave única do item de pedido"
+        tests:
+          - unique
+          - not_null
+      - name: sales_header_key
+        description: "Chave do cabeçalho do pedido"
+      - name: product_key
+        description: "Chave do produto"
+      - name: order_date
+        description: "Data do pedido (vinda do cabeçalho)"
+      - name: customer_key
+        description: "Chave do cliente (vinda do cabeçalho)"
+      - name: extended_amount
+        description: "Valor bruto da linha (quantidade x preço unitário)"
+      - name: discount_amount
+        description: "Desconto alocado à linha = extended_amount x (desconto_header / total_header)"

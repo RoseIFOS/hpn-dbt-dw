@@ -1,0 +1,36 @@
+version: 2
+
+sources:
+  - name: raw
+    description: "Camada RAW carregada do OLTP (Postgres) via extract_to_raw.py. Tabelas com prefixo RAW_, colunas em UPPER e metadata de carga (_LOADED_AT, _SOURCE)."
+    database: HPN_DW
+    schema: RAW
+    tables:
+      - name: RAW_ACCOUNT
+        description: "Plano de contas contábil."
+      - name: RAW_ACCOUNT_HEADER
+        description: "Cabeçalhos/agrupadores do plano de contas."
+      - name: RAW_CUSTOMER
+        description: "Clientes (academias)."
+      - name: RAW_DEPARTMENT_GROUP
+        description: "Grupos de departamento usados no financeiro."
+      - name: RAW_FINANCE
+        description: "Lançamentos financeiros (fato financeiro de origem)."
+      - name: RAW_GEOGRAPHY
+        description: "Geografia: cidade/estado/país, ligada à região."
+      - name: RAW_ORGANIZATION
+        description: "Estrutura organizacional."
+      - name: RAW_PRODUCT
+        description: "Produtos (suplementos)."
+      - name: RAW_PRODUCT_SUB_CATEGORY
+        description: "Subcategorias de produto e sua categoria."
+      - name: RAW_PRODUCT_COST_HISTORY
+        description: "Histórico de custo unitário por produto/país/ano/mês."
+      - name: RAW_REGION
+        description: "Regiões geográficas (região/país/continente)."
+      - name: RAW_SALES_HEADER
+        description: "Cabeçalho de pedidos de venda."
+      - name: RAW_SALES_DETAILS
+        description: "Itens (linhas) dos pedidos de venda."
+      - name: RAW_SALES_RETURNS
+        description: "Devoluções de venda."

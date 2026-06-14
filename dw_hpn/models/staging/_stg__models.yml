@@ -1,0 +1,389 @@
+version: 2
+
+models:
+  - name: stg_account
+    description: "Staging do plano de contas contábil. Dados limpos e tipados, um registro por conta."
+    columns:
+      - name: account_key
+        description: "Chave de negócio única da conta contábil"
+        tests:
+          - unique
+          - not_null
+      - name: account_header_key
+        description: "Chave do cabeçalho/agrupador da conta (FK para stg_account_header)"
+        tests:
+          - relationships:
+              arguments:
+                to: ref('stg_account_header')
+                field: account_header_key
+      - name: account_sub_header_key
+        description: "Chave do subcabeçalho da conta"
+      - name: account_name
+        description: "Nome da conta contábil"
+      - name: account_type
+        description: "Tipo da conta (ex.: ativo, passivo, receita, despesa)"
+      - name: sign
+        description: "Sinal contábil da conta (ex.: 1 para crédito, -1 para débito)"
+      - name: account_sub_header
+        description: "Descrição do subcabeçalho da conta"
+      - name: sub_header_detail
+        description: "Detalhe numérico do subcabeçalho"
+      - name: etl_inserted_at
+        description: "Timestamp de quando o dado foi carregado no RAW (metadata de ETL)"
+      - name: record_source
+        description: "Sistema de origem do registro (ex.: postgres_oltp)"
+
+  - name: stg_account_header
+    description: "Staging dos cabeçalhos/agrupadores do plano de contas."
+    columns:
+      - name: account_header_key
+        description: "Chave de negócio única do cabeçalho de conta"
+        tests:
+          - unique
+          - not_null
+      - name: account_header_name
+        description: "Nome do cabeçalho de conta"
+      - name: detail
+        description: "Detalhe numérico do cabeçalho"
+      - name: etl_inserted_at
+        description: "Timestamp de quando o dado foi carregado no RAW (metadata de ETL)"
+      - name: record_source
+        description: "Sistema de origem do registro (ex.: postgres_oltp)"
+
+  - name: stg_customer
+    description: "Staging da tabela de clientes (academias). Dados limpos e tipados, um registro por cliente."
+    columns:
+      - name: customer_key
+        description: "Chave de negócio única do cliente"
+        tests:
+          - unique
+          - not_null
+      - name: geography_key
+        description: "Chave da geografia/localização do cliente (FK para stg_geography)"
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('stg_geography')
+                field: geography_key
+      - name: customer_name
+        description: "Nome do cliente (academia)"
+      - name: business_type
+        description: "Tipo de negócio do cliente (ex.: Gym)"
+      - name: number_employees
+        description: "Número de funcionários do cliente"
+      - name: annual_revenue
+        description: "Faturamento anual estimado do cliente"
+      - name: year_opened
+        description: "Ano de abertura do cliente"
+      - name: etl_inserted_at
+        description: "Timestamp de quando o dado foi carregado no RAW (metadata de ETL)"
+      - name: record_source
+        description: "Sistema de origem do registro (ex.: postgres_oltp)"
+
+  - name: stg_department_group
+    description: "Staging dos grupos de departamento usados no financeiro."
+    columns:
+      - name: department_group_key
+        description: "Chave de negócio única do grupo de departamento"
+        tests:
+          - unique
+          - not_null
+      - name: department_group_name
+        description: "Nome do grupo de departamento"
+      - name: etl_inserted_at
+        description: "Timestamp de quando o dado foi carregado no RAW (metadata de ETL)"
+      - name: record_source
+        description: "Sistema de origem do registro (ex.: postgres_oltp)"
+
+  - name: stg_finance
+    description: "Staging dos lançamentos financeiros. Datas e valores convertidos de texto (formato BR) para date/number."
+    columns:
+      - name: finance_key
+        description: "Chave de negócio única do lançamento financeiro"
+        tests:
+          - unique
+          - not_null
+      - name: transaction_date
+        description: "Data da transação (convertida de DD/MM/YYYY)"
+      - name: organization_key
+        description: "Chave da organização (FK para stg_organization)"
+        tests:
+          - relationships:
+              arguments:
+                to: ref('stg_organization')
+                field: organization_key
+      - name: department_group_key
+        description: "Chave do grupo de departamento (FK para stg_department_group)"
+        tests:
+          - relationships:
+              arguments:
+                to: ref('stg_department_group')
+                field: department_group_key
+      - name: account_key
+        description: "Chave da conta contábil (FK para stg_account)"
+        tests:
+          - relationships:
+              arguments:
+                to: ref('stg_account')
+                field: account_key
+      - name: scenario
+        description: "Cenário do lançamento (ex.: Actual, Budget, Forecast)"
+      - name: amount
+        description: "Valor do lançamento financeiro (convertido de texto com vírgula decimal)"
+      - name: etl_inserted_at
+        description: "Timestamp de quando o dado foi carregado no RAW (metadata de ETL)"
+      - name: record_source
+        description: "Sistema de origem do registro (ex.: postgres_oltp)"
+
+  - name: stg_geography
+    description: "Staging da geografia (cidade/estado/país). Atenção: nomes de cidade/estado têm problema de encoding na origem (mojibake)."
+    columns:
+      - name: geography_key
+        description: "Chave de negócio única da geografia"
+        tests:
+          - unique
+          - not_null
+      - name: city_name
+        description: "Nome da cidade (pode conter caracteres corrompidos por encoding na origem)"
+      - name: state_code
+        description: "Sigla do estado (UF)"
+      - name: state_name
+        description: "Nome do estado (pode conter caracteres corrompidos por encoding na origem)"
+      - name: country_code
+        description: "Código do país (ex.: BR)"
+      - name: country_name
+        description: "Nome do país"
+      - name: region_key
+        description: "Chave da região (FK para stg_region)"
+        tests:
+          - relationships:
+              arguments:
+                to: ref('stg_region')
+                field: region_key
+      - name: etl_inserted_at
+        description: "Timestamp de quando o dado foi carregado no RAW (metadata de ETL)"
+      - name: record_source
+        description: "Sistema de origem do registro (ex.: postgres_oltp)"
+
+  - name: stg_organization
+    description: "Staging da estrutura organizacional (hierarquia de organizações)."
+    columns:
+      - name: organization_key
+        description: "Chave de negócio única da organização"
+        tests:
+          - unique
+          - not_null
+      - name: organization_name
+        description: "Nome da organização"
+      - name: parent_organization_name
+        description: "Nome da organização pai (hierarquia)"
+      - name: etl_inserted_at
+        description: "Timestamp de quando o dado foi carregado no RAW (metadata de ETL)"
+      - name: record_source
+        description: "Sistema de origem do registro (ex.: postgres_oltp)"
+
+  - name: stg_product
+    description: "Staging de produtos (suplementos)."
+    columns:
+      - name: product_key
+        description: "Chave de negócio única do produto"
+        tests:
+          - unique
+          - not_null
+      - name: product_sub_category_key
+        description: "Chave da subcategoria do produto (FK para stg_product_sub_category)"
+        tests:
+          - relationships:
+              arguments:
+                to: ref('stg_product_sub_category')
+                field: product_sub_category_key
+      - name: product_name
+        description: "Nome do produto"
+      - name: product_size
+        description: "Tamanho/embalagem do produto (ex.: 5lbs)"
+      - name: product_detail
+        description: "Detalhe/variante do produto (ex.: sabor Chocolate)"
+      - name: etl_inserted_at
+        description: "Timestamp de quando o dado foi carregado no RAW (metadata de ETL)"
+      - name: record_source
+        description: "Sistema de origem do registro (ex.: postgres_oltp)"
+
+  - name: stg_product_sub_category
+    description: "Staging das subcategorias de produto e sua categoria pai."
+    columns:
+      - name: product_sub_category_key
+        description: "Chave de negócio única da subcategoria de produto"
+        tests:
+          - unique
+          - not_null
+      - name: sub_category_name
+        description: "Nome da subcategoria"
+      - name: category_name
+        description: "Nome da categoria pai"
+      - name: etl_inserted_at
+        description: "Timestamp de quando o dado foi carregado no RAW (metadata de ETL)"
+      - name: record_source
+        description: "Sistema de origem do registro (ex.: postgres_oltp)"
+
+  - name: stg_product_cost_history
+    description: "Staging do histórico de custo unitário por produto/país/ano/mês. Base para o cálculo de custo e margem nas vendas."
+    columns:
+      - name: product_key
+        description: "Chave do produto (FK para stg_product)"
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('stg_product')
+                field: product_key
+      - name: country_code
+        description: "Código do país do custo (ex.: CA, US)"
+      - name: cost_year
+        description: "Ano de vigência do custo"
+      - name: cost_month
+        description: "Mês de vigência do custo (1-12)"
+      - name: unit_cost
+        description: "Custo unitário do produto no país/ano/mês (convertido de texto com vírgula decimal)"
+      - name: etl_inserted_at
+        description: "Timestamp de quando o dado foi carregado no RAW (metadata de ETL)"
+      - name: record_source
+        description: "Sistema de origem do registro (ex.: postgres_oltp)"
+
+  - name: stg_region
+    description: "Staging das regiões geográficas (região/país/continente)."
+    columns:
+      - name: region_key
+        description: "Chave de negócio única da região"
+        tests:
+          - unique
+          - not_null
+      - name: region_name
+        description: "Nome da região"
+      - name: country
+        description: "País da região"
+      - name: continent
+        description: "Continente da região"
+      - name: etl_inserted_at
+        description: "Timestamp de quando o dado foi carregado no RAW (metadata de ETL)"
+      - name: record_source
+        description: "Sistema de origem do registro (ex.: postgres_oltp)"
+
+  - name: stg_sales_header
+    description: "Staging do cabeçalho dos pedidos de venda. Datas e valores convertidos de texto (formato BR)."
+    columns:
+      - name: sales_header_key
+        description: "Chave de negócio única do cabeçalho do pedido"
+        tests:
+          - unique
+          - not_null
+      - name: sales_order_number
+        description: "Número do pedido de venda (ex.: SO46675)"
+        tests:
+          - not_null
+      - name: order_date
+        description: "Data do pedido (convertida de DD/MM/YYYY)"
+      - name: due_date
+        description: "Data prevista de entrega (convertida de DD/MM/YYYY)"
+      - name: ship_date
+        description: "Data de envio (convertida de DD/MM/YYYY)"
+      - name: customer_key
+        description: "Chave do cliente (FK para stg_customer)"
+        tests:
+          - relationships:
+              arguments:
+                to: ref('stg_customer')
+                field: customer_key
+      - name: region_key
+        description: "Chave da região (FK para stg_region)"
+        tests:
+          - relationships:
+              arguments:
+                to: ref('stg_region')
+                field: region_key
+      - name: discount_amount
+        description: "Valor de desconto do pedido (convertido de texto com vírgula decimal)"
+      - name: total_amount
+        description: "Valor total do pedido (convertido de texto com vírgula decimal)"
+      - name: sales_amount
+        description: "Valor de venda do pedido, líquido de desconto (convertido de texto com vírgula decimal)"
+      - name: etl_inserted_at
+        description: "Timestamp de quando o dado foi carregado no RAW (metadata de ETL)"
+      - name: record_source
+        description: "Sistema de origem do registro (ex.: postgres_oltp)"
+
+  - name: stg_sales_details
+    description: "Staging dos itens (linhas) dos pedidos de venda. Grão: uma linha por item de pedido."
+    columns:
+      - name: sales_details_key
+        description: "Chave de negócio única do item de pedido"
+        tests:
+          - unique
+          - not_null
+      - name: sales_header_key
+        description: "Chave do cabeçalho do pedido (FK para stg_sales_header)"
+        tests:
+          - relationships:
+              arguments:
+                to: ref('stg_sales_header')
+                field: sales_header_key
+      - name: sales_order_number
+        description: "Número do pedido de venda (ex.: SO46621)"
+      - name: product_key
+        description: "Chave do produto (FK para stg_product)"
+        tests:
+          - relationships:
+              arguments:
+                to: ref('stg_product')
+                field: product_key
+      - name: product_sub_category_key
+        description: "Chave da subcategoria do produto"
+      - name: order_quantity
+        description: "Quantidade do item no pedido"
+      - name: unit_price
+        description: "Preço unitário do item (convertido de texto com vírgula decimal)"
+      - name: extended_amount
+        description: "Valor estendido do item = quantidade x preço unitário (convertido de texto)"
+      - name: etl_inserted_at
+        description: "Timestamp de quando o dado foi carregado no RAW (metadata de ETL)"
+      - name: record_source
+        description: "Sistema de origem do registro (ex.: postgres_oltp)"
+
+  - name: stg_sales_returns
+    description: "Staging das devoluções de venda. Datas e valores convertidos de texto (formato BR)."
+    columns:
+      - name: return_key
+        description: "Chave de negócio única da devolução"
+        tests:
+          - unique
+          - not_null
+      - name: return_date
+        description: "Data da devolução (convertida de DD/MM/YYYY)"
+      - name: order_date
+        description: "Data do pedido original (convertida de DD/MM/YYYY)"
+      - name: sales_order_number
+        description: "Número do pedido de venda associado"
+      - name: customer_key
+        description: "Chave do cliente (FK para stg_customer)"
+        tests:
+          - relationships:
+              arguments:
+                to: ref('stg_customer')
+                field: customer_key
+      - name: product_key
+        description: "Chave do produto devolvido (FK para stg_product)"
+        tests:
+          - relationships:
+              arguments:
+                to: ref('stg_product')
+                field: product_key
+      - name: return_quantity
+        description: "Quantidade devolvida"
+      - name: unit_price
+        description: "Preço unitário do item devolvido (convertido de texto com vírgula decimal)"
+      - name: return_amount
+        description: "Valor total da devolução (convertido de texto com vírgula decimal)"
+      - name: etl_inserted_at
+        description: "Timestamp de quando o dado foi carregado no RAW (metadata de ETL)"
+      - name: record_source
+        description: "Sistema de origem do registro (ex.: postgres_oltp)"

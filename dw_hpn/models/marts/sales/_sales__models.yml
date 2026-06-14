@@ -1,0 +1,77 @@
+version: 2
+
+models:
+  - name: fct_sales
+    description: "Fato de vendas no grão de linha de pedido. Inclui medidas linha-a-linha (bruto, desconto, custo, líquido, margem) prontas para agregação no Power BI."
+    columns:
+      - name: sales_details_key
+        description: "Chave única da linha de venda"
+        tests:
+          - unique
+          - not_null
+      - name: product_key
+        description: "Chave do produto (FK para dim_product)"
+        tests:
+          - relationships:
+              arguments:
+                to: ref('dim_product')
+                field: product_key
+      - name: customer_key
+        description: "Chave do cliente (FK para dim_customer)"
+        tests:
+          - relationships:
+              arguments:
+                to: ref('dim_customer')
+                field: customer_key
+      - name: order_date
+        description: "Data do pedido (FK para dim_date)"
+        tests:
+          - relationships:
+              arguments:
+                to: ref('dim_date')
+                field: date_day
+      - name: order_quantity
+        description: "Quantidade vendida na linha"
+      - name: unit_price
+        description: "Preço unitário"
+      - name: unit_cost
+        description: "Custo unitário (lookup por produto/país/ano/mês). Nulo quando não há custo correspondente."
+      - name: gross_amount
+        description: "Valor bruto da linha (quantidade x preço unitário)"
+      - name: discount_amount
+        description: "Desconto alocado à linha"
+      - name: cost_amount
+        description: "Custo total da linha (quantidade x custo unitário)"
+      - name: net_amount
+        description: "Valor líquido da linha (bruto - desconto)"
+      - name: gross_margin_amount
+        description: "Margem bruta da linha (líquido - custo)"
+
+  - name: fct_sales_returns
+    description: "Fato de devoluções de venda. Grão: uma linha por devolução."
+    columns:
+      - name: return_key
+        description: "Chave única da devolução"
+        tests:
+          - unique
+          - not_null
+      - name: customer_key
+        description: "Chave do cliente (FK para dim_customer)"
+        tests:
+          - relationships:
+              arguments:
+                to: ref('dim_customer')
+                field: customer_key
+      - name: product_key
+        description: "Chave do produto (FK para dim_product)"
+        tests:
+          - relationships:
+              arguments:
+                to: ref('dim_product')
+                field: product_key
+      - name: return_quantity
+        description: "Quantidade devolvida"
+      - name: unit_price
+        description: "Preço unitário do item devolvido"
+      - name: return_amount
+        description: "Valor total da devolução (quantidade devolvida x preço unitário)"

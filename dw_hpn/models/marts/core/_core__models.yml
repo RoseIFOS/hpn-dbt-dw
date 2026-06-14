@@ -1,0 +1,55 @@
+version: 2
+
+models:
+  - name: dim_customer
+    description: "Dimensão conformada de cliente (cliente + geografia + região). Usada pelos fatos de vendas e devoluções."
+    columns:
+      - name: customer_key
+        description: "Chave de negócio única do cliente"
+        tests:
+          - unique
+          - not_null
+      - name: customer_name
+        description: "Nome do cliente (academia)"
+      - name: business_type
+        description: "Tipo de negócio do cliente"
+      - name: city_name
+        description: "Cidade do cliente"
+      - name: state_name
+        description: "Estado do cliente"
+      - name: country_code
+        description: "Código do país do cliente (usado no lookup de custo)"
+      - name: country_name
+        description: "Nome do país do cliente"
+      - name: region_name
+        description: "Nome da região do cliente"
+      - name: continent
+        description: "Continente do cliente"
+
+  - name: dim_product
+    description: "Dimensão conformada de produto (produto + subcategoria + categoria). Usada pelos fatos de vendas, devoluções e custo."
+    columns:
+      - name: product_key
+        description: "Chave de negócio única do produto"
+        tests:
+          - unique
+          - not_null
+      - name: product_name
+        description: "Nome do produto"
+      - name: product_size
+        description: "Tamanho/embalagem do produto"
+      - name: product_detail
+        description: "Detalhe/variante do produto (ex.: sabor)"
+      - name: sub_category_name
+        description: "Subcategoria do produto"
+      - name: category_name
+        description: "Categoria do produto"
+
+  - name: dim_date
+    description: "Dimensão de calendário conformada, gerada via dbt_date. Range dinâmico: do 1º de janeiro do menor ano das vendas até 31 de dezembro do ano corrente. Usada por todos os fatos."
+    columns:
+      - name: date_day
+        description: "Data (grão diário) - chave da dimensão"
+        tests:
+          - unique
+          - not_null
