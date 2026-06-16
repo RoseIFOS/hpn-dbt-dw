@@ -1,0 +1,18 @@
+# Profile para uso via dbt CLI (CI no GitHub Actions).
+# No Airflow o profile e gerado em runtime pelo Cosmos; este arquivo so e usado
+# quando se roda `dbt ... --profiles-dir .` (caso do CI).
+# Auth key-pair: a chave privada e escrita em arquivo pelo workflow e apontada
+# por SNOWFLAKE_PRIVATE_KEY_PATH. Nada de senha/MFA.
+dw_hpn:
+  target: ci
+  outputs:
+    ci:
+      type: snowflake
+      account: "{{ env_var('SNOWFLAKE_ACCOUNT') }}"
+      user: "{{ env_var('SNOWFLAKE_USER') }}"
+      role: DBT_ROLE
+      database: HPN_DW
+      warehouse: TRANSFORM_DEV_WH
+      schema: CI                      # gera CI_STAGING / CI_MARTS (isolado de dev/prod)
+      private_key_path: "{{ env_var('SNOWFLAKE_PRIVATE_KEY_PATH') }}"
+      threads: 4
