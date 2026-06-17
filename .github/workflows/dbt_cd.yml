@@ -1,0 +1,64 @@
+name: dbt CD
+
+# Deploy no merge para main:
+#   1) deploy-dev  -> dbt build --target dev   (automatico, na hora)
+#   2) deploy-prod -> dbt build --target prod  (PAUSA no gate do Environment
+#      "production" ate aprovacao manual na aba Actions)
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy-dev:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: dw_hpn
+    env:
+      SNOWFLAKE_ACCOUNT: ${{ secrets.SNOWFLAKE_ACCOUNT }}
+      SNOWFLAKE_USER: ${{ secrets.SNOWFLAKE_USER }}
+      SNOWFLAKE_PRIVATE_KEY_PATH: ${{ github.workspace }}/rsa_key.p8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install dbt
+        run: pip install dbt-snowflake
+      - name: Write Snowflake private key
+        run: |
+          echo "${{ secrets.SNOWFLAKE_PRIVATE_KEY }}" > "$SNOWFLAKE_PRIVATE_KEY_PATH"
+          chmod 600 "$SNOWFLAKE_PRIVATE_KEY_PATH"
+      - name: dbt deps
+        run: dbt deps
+      - name: dbt build (target dev)
+        run: dbt build --target dev --profiles-dir .
+
+  deploy-prod:
+    needs: deploy-dev
+    runs-on: ubuntu-latest
+    # O gate: este Environment tem "required reviewers" configurado no GitHub.
+    # O job fica "waiting" ate alguem clicar Approve na aba Actions.
+    environment: production
+    defaults:
+      run:
+        working-directory: dw_hpn
+    env:
+      SNOWFLAKE_ACCOUNT: ${{ secrets.SNOWFLAKE_ACCOUNT }}
+      SNOWFLAKE_USER: ${{ secrets.SNOWFLAKE_USER }}
+      SNOWFLAKE_PRIVATE_KEY_PATH: ${{ github.workspace }}/rsa_key.p8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install dbt
+        run: pip install dbt-snowflake
+      - name: Write Snowflake private key
+        run: |
+          echo "${{ secrets.SNOWFLAKE_PRIVATE_KEY }}" > "$SNOWFLAKE_PRIVATE_KEY_PATH"
+          chmod 600 "$SNOWFLAKE_PRIVATE_KEY_PATH"
+      - name: dbt deps
+        run: dbt deps
+      - name: dbt build (target prod)
+        run: dbt build --target prod --profiles-dir .

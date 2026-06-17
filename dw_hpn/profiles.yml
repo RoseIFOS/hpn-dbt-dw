@@ -1,8 +1,13 @@
-# Profile para uso via dbt CLI (CI no GitHub Actions).
+# Profile para uso via dbt CLI (CI/CD no GitHub Actions).
 # No Airflow o profile e gerado em runtime pelo Cosmos; este arquivo so e usado
-# quando se roda `dbt ... --profiles-dir .` (caso do CI).
+# quando se roda `dbt ... --profiles-dir .` (caso do CI/CD).
 # Auth key-pair: a chave privada e escrita em arquivo pelo workflow e apontada
 # por SNOWFLAKE_PRIVATE_KEY_PATH. Nada de senha/MFA.
+#
+# Targets:
+#   ci   -> schema CI       (valida PRs, isolado de dev/prod)
+#   dev  -> schema DBT_DEV   (refresh de DEV no merge)
+#   prod -> schema PROD      (deploy de PROD, atras do gate de aprovacao)
 dw_hpn:
   target: ci
   outputs:
@@ -13,6 +18,26 @@ dw_hpn:
       role: DBT_ROLE
       database: HPN_DW
       warehouse: TRANSFORM_DEV_WH
-      schema: CI                      # gera CI_STAGING / CI_MARTS (isolado de dev/prod)
+      schema: CI                      # gera CI_STAGING / CI_MARTS
+      private_key_path: "{{ env_var('SNOWFLAKE_PRIVATE_KEY_PATH') }}"
+      threads: 4
+    dev:
+      type: snowflake
+      account: "{{ env_var('SNOWFLAKE_ACCOUNT') }}"
+      user: "{{ env_var('SNOWFLAKE_USER') }}"
+      role: DBT_ROLE
+      database: HPN_DW
+      warehouse: TRANSFORM_DEV_WH
+      schema: DBT_DEV                  # gera DBT_DEV_STAGING / DBT_DEV_MARTS
+      private_key_path: "{{ env_var('SNOWFLAKE_PRIVATE_KEY_PATH') }}"
+      threads: 4
+    prod:
+      type: snowflake
+      account: "{{ env_var('SNOWFLAKE_ACCOUNT') }}"
+      user: "{{ env_var('SNOWFLAKE_USER') }}"
+      role: DBT_ROLE
+      database: HPN_DW
+      warehouse: TRANSFORM_PROD_WH     # warehouse separado de prod
+      schema: PROD                     # gera PROD_STAGING / PROD_MARTS
       private_key_path: "{{ env_var('SNOWFLAKE_PRIVATE_KEY_PATH') }}"
       threads: 4

@@ -41,5 +41,9 @@ models:
       +materialized: table
       +schema: marts
 
+seeds:
+  dw_hpn:
+    +schema: marts          # seeds materializam junto das marts (ex.: PROD_MARTS)
+
 vars:
   "dbt_date:time_zone": "America/Sao_Paulo"
