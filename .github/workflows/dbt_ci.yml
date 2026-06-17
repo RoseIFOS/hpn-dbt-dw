@@ -1,8 +1,8 @@
 name: dbt CI
 
+# Valida toda PR para main em um schema isolado (CI_*), sem tocar dev/prod.
+# O deploy (dev + prod com gate) fica no dbt_cd.yml, disparado no merge.
 on:
-  push:
-    branches: [main]
   pull_request:
     branches: [main]
 

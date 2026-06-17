@@ -1,0 +1,17 @@
+version: 2
+
+seeds:
+  - name: sales_user_roles
+    description: >
+      Roles dos usuarios de vendas (dado de referencia, carregado via seed).
+      SEED DE TESTE para exercitar o fluxo CI/CD -> trocar pelo dado real depois.
+    columns:
+      - name: sales_user_id
+        description: Identificador unico do usuario de vendas.
+        data_tests:
+          - unique
+          - not_null
+      - name: role
+        description: Papel do usuario na area de vendas.
+        data_tests:
+          - not_null

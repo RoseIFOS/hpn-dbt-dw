@@ -1,0 +1,9 @@
+sales_user_id,full_name,role,region_code,is_active
+1,Ana Ribeiro,Sales Rep,BR-SE,true
+2,Bruno Costa,Sales Rep,BR-S,true
+3,Carla Mendes,Account Manager,BR-SE,true
+4,Diego Alves,Sales Manager,BR,true
+5,Elena Souza,Sales Rep,BR-NE,true
+6,Felipe Lima,Account Manager,BR-S,false
+7,Gabriela Nunes,Sales Director,BR,true
+8,Henrique Dias,Sales Rep,BR-CO,true
